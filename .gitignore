@@ -1,2 +1,18 @@
 data/
 *.csv
+
+# Virtual environment
+.venv/
+.env/
+
+# Cache files
+__pycache__/
+*.pyc
+
+# System files
+.DS_Store
+
+# Logs
+*.log
+
+.python-version

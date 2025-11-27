@@ -22,18 +22,15 @@ st.markdown("Forecast grid stress for the next 1–6 hours using trained XGBoost
 
 
 # ------------------------------------------------------------
-# 2. Load DE models from shared Databricks Volume
+# 2. Load DE models from repo
 # ------------------------------------------------------------
-
 @st.cache_resource
 def load_models():
     models = {}
-
-    # Path inside your repo
-    model_path = "models/de"
+    model_path = "Streamlit/models/de"  # ✅ updated path
 
     for h in [1, 2, 3, 4, 5, 6]:
-        fname = os.path.join(model_path, f"rf_stress_plus_{h}h.pkl")  # rename if needed
+        fname = os.path.join(model_path, f"stress_plus_{h}h.pkl")  # ✅ removed 'rf_' prefix
 
         if os.path.exists(fname):
             with open(fname, "rb") as f:
@@ -58,12 +55,11 @@ st.success("✅ XGBoost models loaded!")
 # ------------------------------------------------------------
 @st.cache_data
 def load_data():
-    df = pd.read_csv("data/train_set_DE.csv", parse_dates=["timestamp"])
-    df = df.sort_values("timestamp")
-    return df
+    return pd.read_csv("Streamlit/data_streamlit/train_XGBoost_DE.csv", parse_dates=["timestamp"])  # ✅ updated path
 
 
 df = load_data()
+df = df.sort_values("timestamp")
 
 feature_cols = [
     c for c in df.columns
@@ -99,9 +95,12 @@ st.subheader("📈 Predicted Grid Stress (Next 1–6 Hours)")
 predictions = {}
 for h in [1, 2, 3, 4, 5, 6]:
     key = f"stress_plus_{h}h"
-    model = models[key]
-    pred = model.predict(X_input)[0]
-    predictions[h] = pred
+    model = models.get(key)
+    if model:
+        pred = model.predict(X_input)[0]
+        predictions[h] = pred
+    else:
+        predictions[h] = np.nan
 
 pred_df = pd.DataFrame({
     "Hours Ahead": list(predictions.keys()),
@@ -130,18 +129,22 @@ st.subheader("🔍 Feature Importance")
 h_selected = st.selectbox("Select horizon:", [1, 2, 3, 4, 5, 6])
 model_key = f"stress_plus_{h_selected}h"
 
-importances = models[model_key].feature_importances_
+model = models.get(model_key)
+if model:
+    importances = model.feature_importances_
 
-imp_df = pd.DataFrame({
-    "feature": feature_cols,
-    "importance": importances
-}).sort_values("importance", ascending=False).head(20)
+    imp_df = pd.DataFrame({
+        "feature": feature_cols,
+        "importance": importances
+    }).sort_values("importance", ascending=False).head(20)
 
-fig, ax = plt.subplots(figsize=(8, 10))
-ax.barh(imp_df["feature"], imp_df["importance"])
-ax.set_title(f"Top 20 Feature Importances (+{h_selected}h)")
-ax.invert_yaxis()
-st.pyplot(fig)
+    fig, ax = plt.subplots(figsize=(8, 10))
+    ax.barh(imp_df["feature"], imp_df["importance"])
+    ax.set_title(f"Top 20 Feature Importances (+{h_selected}h)")
+    ax.invert_yaxis()
+    st.pyplot(fig)
+else:
+    st.warning("Feature importance data not available for this horizon.")
 
 
 # ------------------------------------------------------------
