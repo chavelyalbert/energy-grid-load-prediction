@@ -22,15 +22,17 @@ st.markdown("Forecast grid stress for the next 1–6 hours using trained XGBoost
 
 
 # ------------------------------------------------------------
-# 2. Load DE models from repo
+# 2. Load DE models (correct relative path)
 # ------------------------------------------------------------
 @st.cache_resource
 def load_models():
     models = {}
-    model_path = "Streamlit/models/de"  # ✅ updated path
+
+    # ✅ Correct path when running from Streamlit/ folder
+    model_path = "models/de"
 
     for h in [1, 2, 3, 4, 5, 6]:
-        fname = os.path.join(model_path, f"stress_plus_{h}h.pkl")  # ✅ removed 'rf_' prefix
+        fname = os.path.join(model_path, f"stress_plus_{h}h.pkl")
 
         if os.path.exists(fname):
             with open(fname, "rb") as f:
@@ -51,11 +53,14 @@ st.success("✅ XGBoost models loaded!")
 
 
 # ------------------------------------------------------------
-# 3. Load DE training dataset
+# 3. Load DE training dataset (correct relative path)
 # ------------------------------------------------------------
 @st.cache_data
 def load_data():
-    return pd.read_csv("Streamlit/data_streamlit/train_XGBoost_DE.csv", parse_dates=["timestamp"])  # ✅ updated path
+    return pd.read_csv(
+        "data_streamlit/train_XGBoost_DE.csv", 
+        parse_dates=["timestamp"]
+    )
 
 
 df = load_data()
