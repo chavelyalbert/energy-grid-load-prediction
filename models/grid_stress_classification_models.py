@@ -809,7 +809,7 @@ import pickle
 import os
 
 # Create directory
-output_dir = "/Workspace/Users/chavely.albert@gmail.com/grid_stress_classification"
+output_dir = "grid_stress_classification"
 os.makedirs(output_dir, exist_ok=True)
 
 # Save model

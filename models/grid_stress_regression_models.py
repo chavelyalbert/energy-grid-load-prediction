@@ -1416,7 +1416,7 @@ print("=" * 80)
 import pickle
 import os
 # Create directory
-output_dir = "/Workspace/Users/chavely.albert@gmail.com/regression_models"
+output_dir = "regression_models"
 os.makedirs(output_dir, exist_ok=True)
 
 # Save model
