@@ -28,10 +28,10 @@ This project predicts grid stress scores (0-100) for European power grids using 
 - **No Data Leakage**: Production-ready features only
 
 **Grid Stress Score Categories:**
-- 0-24: Normal operations ✅
-- 25-49: Moderate stress ⚠️
-- 50-74: High stress (blackout risk) 🔴
-- 75-100: Critical ⛔
+- 0-24: Normal operations 
+- 25-49: Moderate stress 
+- 50-74: High stress (blackout risk) 
+- 75-100: Critical 
 
 ---
 
