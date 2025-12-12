@@ -1,6 +1,8 @@
 # GridWatch - European Power Grid Stress Predictor
 
-A real-time interactive Streamlit dashboard for predicting and monitoring electricity grid stress across 13 European countries. Uses machine learning to forecast grid instability and enable proactive decision-making by grid operators.
+A real-time interactive Streamlit dashboard for predicting and monitoring electricity grid stress across 13 European countries. It uses machine learning to forecast grid instability and enable proactive decision-making by grid operators.
+
+![Dashboard](dashboard.png)
 
 ## Overview
 
@@ -20,20 +22,17 @@ GridWatch integrates weather, generation, load, and cross-border flow data to pr
 
 | Metric | Value |
 |--------|-------|
-| R² Score | 0.999878 |
-| AUC-ROC (Binary) | 0.826 |
-| Training Records | 550,000+ |
-| Countries | 24 |
-| Features | 100 |
+| Recall | 0.807 |
+| F1-Score | 0.765 |
 
 ## Stress Score Interpretation
 
 | Score Range | Status | Action |
 |-------------|--------|--------|
-| 0-24 | Normal | Standard operations |
-| 25-49 | Moderate | Increased monitoring |
-| 50-74 | High Risk | Immediate intervention |
-| 75 | Critical | Emergency protocols |
+| 0-32 | Normal | Standard operations |
+| 33-65 | Moderate | Increased monitoring |
+| 66-99 | High Risk | Immediate intervention |
+| 100 | Critical | Emergency protocols |
 
 ## Installation
 
@@ -57,12 +56,13 @@ GridWatch integrates weather, generation, load, and cross-border flow data to pr
    - `xgboost_model.pkl` - Trained XGBoost model
    - `feature_names.pkl` - Model feature names
    - `country_stats.csv` - Country-level statistics
+   - need to copy the ARIMA model pkl files inside arima_models folder. They are an output of the models notebook.
 
 5. Create a .env file with Databricks credentials
 ```python
-   DATABRICKS_TOKEN=your_token_here
-   DATABRICKS_HOSTNAME=your_hostname.cloud.databricks.com
-   DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/your_warehouse_id
+DATABRICKS_TOKEN=your_token_here
+DATABRICKS_HOSTNAME=your_hostname.cloud.databricks.com
+DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/your_warehouse_id
 ```
 
 ## Usage
@@ -77,7 +77,22 @@ The dashboard will open in your default web browser at `http://localhost:8501`.
 
 ## Dashboard Components
 
-### Sidebar Controls
+### 1. Dual Mode Operation
+
+Live Mode 🔴
+
+- Real-time data from Databricks
+- Current grid conditions for all countries
+- Auto-updated stress predictions
+- Actual 24-hour stress history
+
+Simulated Mode 🎮
+
+- Manual parameter adjustment
+- Scenario presets (Heat Wave, Cold Snap, etc.)
+- Stress simulation for training/education
+
+### 2. Sidebar Controls
 
 - **Country Selection**: Choose from 13 European countries
 - **Scenario Presets**: Quick-load predefined scenarios
@@ -86,15 +101,7 @@ The dashboard will open in your default web browser at `http://localhost:8501`.
 - **Weather**: Configure temperature, wind, and solar
 - **Time**: Set hour and day of week
 
-### Main Dashboard
-
-- **Top Metrics**: Stress score, current load, imports, targets triggered
-- **Stress Gauge**: Visual representation of current stress level
-- **Target Breakdown**: Individual component contributions (underlying cause)
-- **6-Hour Projection**: Forecasted stress fro the next 6 hours
-- **Feature Importance**: Key model drivers
-
-## Scenario Presets
+#### Scenario Presets
 
 | Preset | Description |
 |--------|-------------|
@@ -106,9 +113,19 @@ The dashboard will open in your default web browser at `http://localhost:8501`.
 | Forecast Error | Significant load forecasting miss |
 | Peak Hour Stress | High demand period |
 
+### 3. Main Dashboard
+
+- **Top Metrics**: Stress score, current load, imports, targets triggered
+- **Stress Gauge**: Visual representation of current stress level
+- **Target Breakdown**: Individual component contributions (underlying cause)
+- **6-Hour Projection**: Forecasted stress fro the next 6 hours
+- **Feature Importance**: Key model drivers
+- **EU Heatmap**: Grid stress map of all 13 countries
+
+
 ## Countries Covered
 
-AT (Austria), BE (Belgium), BG (Bulgaria), CH (Switzerland), DE (Germany), DK (Denmark), EE (Estonia), ES (Spain), FI (Finland), FR (France), GR (Greece), HR (Croatia), HU (Hungary), IT (Italy), LT (Lithuania), LV (Latvia), NL (Netherlands), NO (Norway), PL (Poland), PT (Portugal), RO (Romania), SE (Sweden), SK (Slovakia)
+🇦🇹 Austria (AT), 🇧🇪 Belgium (BE), 🇧🇬 Bulgaria (BG), 🇨🇭 Switzerland (CH), 🇩🇪 Germany (DE), 🇩🇰 Denmark (DK), 🇪🇪 Estonia (EE), 🇪🇸 Spain (ES), 🇫🇮 Finland (FI), 🇫🇷 France (FR), 🇬🇷 Greece (GR), 🇭🇷 Croatia (HR), 🇭🇺 Hungary (HU), 🇮🇹 Italy (IT), 🇱🇹 Lithuania (LT), 🇱🇻 Latvia (LV), 🇳🇱 Netherlands (NL), 🇳🇴 Norway (NO), 🇵🇱 Poland (PL), 🇵🇹 Portugal (PT), 🇷🇴 Romania (RO), 🇸🇪 Sweden (SE), 🇸🇰 Slovakia (SK)
 
 ## Technical Details
 
@@ -121,16 +138,49 @@ AT (Austria), BE (Belgium), BG (Bulgaria), CH (Switzerland), DE (Germany), DK (D
   - Temporal patterns (cyclical encoding)
   - Country indicators (one-hot encoded)
 
+### Loaded Models
+- **XGBoost Classification Model**<br>
+File: xgboost_model.pkl<br>
+Type: Binary classifier (High Risk / Normal)<br>
+Output: Probability → 0-100 score
+
+- **ARIMA Models (Per Country)**<br>
+Files: arima_models/ARIMA_{COUNTRY}.pkl<br>
+Count: 13 models (one per country)<br>
+Purpose: 6-hour ahead stress forecasting
+
 ### Data Sources
 - ENTSOE Transparency Platform
 - Weather data from Reanalysis data produced by ECMWF as part of the Copernicus Program
 - Live Weather data from OpenMeteo
 
+📈 Data Architecture
+
+**Input Data (from Databricks)**<br>
+**Test Set** (Historical Simulations)
+```bash
+Table: workspace.default.x_test_imputed_with_features_countries
+```
+
+**Live Data** (Real-time Predictions)
+```bash
+Table: workspace.live_data.electricity_and_weather_europe_imputed_with_features
+```
+Update Frequency: Hourly<br>
+Coverage: 13 countries
+
+**Stress History** (ARIMA Training)
+```bash
+Table: workspace.live_data.grid_stress_scores_real
+```
+Records: 24-hour sliding window<br>
+Purpose: Time-series forecasting
+
 ## File Structure
 
 ```
 streamlit_capstone/
-├── app_eu_grid_stress.py     # Main Streamlit application
+├── app_eu_grid_stress.py.    # Main Streamlit application
 ├── requirements.txt          # Python dependencies
 ├── README.md                 # This file
 ├── xgboost_model.pkl         # Trained model
@@ -146,10 +196,10 @@ streamlit_capstone/
 
 Capstone Project - European Power Grid Stress Prediction  
 December 2025
-Team 6 - GridWatch: 
-Chavely Albert Fernandez
-Pedro Miguel
-Ya-Chi Hsiao
+Team 6 - GridWatch:<br> 
+Chavely Albert Fernandez<br>
+Pedro Miguel<br>
+Ya-Chi Hsiao<br>
 Maria Sokotushchenko
 
 
