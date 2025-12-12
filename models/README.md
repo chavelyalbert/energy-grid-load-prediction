@@ -107,7 +107,7 @@ databricks configure --token
 
 ## Notebooks Overview
 
-### 1. `TS_ARIMA_13_countries.ipynb`
+### 1. `time_series_ARIMA.ipynb`
 **Purpose**: Time series forecasting using ARIMA models
 
 **What it does:**
