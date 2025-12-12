@@ -12,10 +12,33 @@ Develop a predictive Machine learning model to classify grid stress levels based
 
 ## 📊 Project Workflow
 
-flowchart TD
-    A[📥 Raw Data Sources<br>Weather · Generation · Load · Flows · Forecasts] --> B[🧹 data_processing/<br>Aggregation · Integration · Feature Engineering · Imputation · Splits<br>✓ Clean datasets]
-    B --> C[🤖 models/<br>Training · Tuning · Evaluation · Selection<br>✓ Trained models & predictions]
-    C --> D[📊 streamlit/<br>Visualization · Interpretation · Live Grid-Stress Dashboard]
+1. 📥 **Raw Data Sources**
+- Weather
+- Power generation
+- Electricity load
+- Cross-border flows
+- Existing forecasts
+⬇️
+2. 🧹 **data_processing**/
+- Weather aggregation & geocoding
+- Generation normalization
+- Data integration & feature engineering
+- Target variable: grid-stress score
+- Train/validation/test split
+- Missing value imputation
+✔ Output: Clean datasets ready for modeling
+⬇️
+3. 🤖 **models**
+- Model training & hyperparameter tuning
+- Performance evaluation & comparison
+- Best model selection
+✔ Output: Trained models & predictions
+⬇️
+4. 📊 **Streamlit Dashboard**
+- Result visualization
+- Interpretation tools
+- Live grid-stress prediction
+- Interactive simulation
 
 ## 📁 Repository Structure
 
