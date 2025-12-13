@@ -36,7 +36,7 @@ from pyspark.sql import SparkSession
 class WeatherConfig:
     # Copernicus CDS API (in real life: use secrets / env vars!)
     CDS_API_URL = "https://cds.climate.copernicus.eu/api"
-    CDS_API_KEY = "b2efa6a6-1215-42b6-9a47-2282344a0c23"  # TODO: move to secret/env
+    CDS_API_KEY = "YOUR API KEY HERE"
 
     # Europe bounding box [North, West, South, East]
     EUROPE_BBOX = [72, -25, 35, 45]
