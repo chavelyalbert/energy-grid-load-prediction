@@ -22,7 +22,7 @@ warnings.filterwarnings('ignore', message='.*Converting to PeriodArray.*will dro
 # GLOBAL CONFIG
 # ============================================================================
 
-API_KEY = "7b785108-53d7-42f8-931e-3d28c4323c68"
+API_KEY = "YOUR API KEY HERE"
 
 COUNTRIES = {
     "ES": "Spain", "PT": "Portugal", "FR": "France", "DE": "Germany",
