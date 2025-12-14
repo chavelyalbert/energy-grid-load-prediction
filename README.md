@@ -2,7 +2,7 @@
   <img src="./images/gridwatch_background.png" width="400" alt="GridWatch Logo">
   <div>
     <h1>European Energy Grid Stress Prediction</h1>
-    <p>A comprehensive machine learning project for predicting electricity grid stress across Europe by integrating weather data, electricity load and generation, load forecasts, and cross-border flows. The project includes a [Streamlit web application](https://gridwatch-energy-grid-stress-prediction.streamlit.app/) that serves real-time model predictions through an HTTP endpoint for interactive visualization and analysis.</p>
+    <p>A comprehensive machine learning project for predicting electricity grid stress across Europe by integrating weather data, electricity load and generation, load forecasts, and cross-border flows. The project includes a Streamlit web application (https://gridwatch-energy-grid-stress-prediction.streamlit.app/) that serves real-time model predictions through an HTTP endpoint for interactive visualization and analysis.</p>
   </div>
 </div>
 
