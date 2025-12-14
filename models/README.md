@@ -189,11 +189,11 @@ databricks configure --token
 ## Data
 
 ### Dataset Structure
-```
-- Train:      386,525 records (2023-2024)
-- Validation: 111,670 records (Jan-Jun 2025)
-- Test:        53,599 records (Jul-Nov 2025)
-```
+
+- **Train:**      386,525 records (2023-2024)
+- **Validation:** 111,670 records (Jan-Jun 2025)
+- **Test:**        53,599 records (Jul-Nov 2025)
+
 
 ### Features Used
 
@@ -213,75 +213,63 @@ databricks configure --token
 
 ## Models
 
-### Regression Models (15 Total)
-| Model | MAE | RMSE | R² |
-|-------|-----|------|-----|
-| **LightGBM (boosted)** | **2.156** | **3.247** | **0.9998** |
-| XGBoost (deep) | 2.198 | 3.312 | 0.9997 |
-| Random Forest (deep) | 2.412 | 3.689 | 0.9996 |
-| Gradient Boosting | 2.534 | 3.821 | 0.9995 |
-| Linear Regression | 4.821 | 6.234 | 0.9912 |
+### Regression Models
+The regression task predicts continuous grid stress scores (0–100).  
+The best-performing model is LightGBM.
 
-### Classification Models (10 Total)
-| Model | Accuracy | Precision | Recall | F1 |
-|-------|----------|-----------|--------|-----|
-| **XGBoost (scale_pos_weight)** | **0.9987** | **0.9945** | **0.9823** | **0.9884** |
-| Random Forest (balanced) | 0.9982 | 0.9912 | 0.9789 | 0.9850 |
-| LightGBM Classifier | 0.9979 | 0.9898 | 0.9756 | 0.9826 |
+![Regression Model Performance](../images/best_regression_model_performance.png)
+
+**Key Results (Test Set):**
+- **R²:** ~0.75  
+- **MAE:** ~5.7  
+- **Residual Std:** ~8.0  
+
+These results show that the model captures the overall stress patterns well, with reasonable error levels across all splits.
+
+
+### Classification Models
+We also trained machine learning classifiers to directly predict whether the grid is in a high-risk state (binary classification).  
+The best model is **XGBoost (scale_pos_weight)**.
+
+![Best Classification Model](../images/best_classification_model_performance.png)
+
+**Performance:**
+- **Recall:** ~0.807  
+- **F1-Score:** ~0.765  
+
+This model provides a balanced trade-off between detecting high-risk events and avoiding false alarms.
+
+
 
 ### Time Series Models (13 ARIMA)
 - One ARIMA model per country
-- Average MAE: ~3.5 points
-- Average RMSE: ~4.8 points
+- **Average MAE:** ~3.5 points
+- **Average RMSE:** ~4.8 points
 
 ---
 
 ## Results
 
 ### Regression Performance (Test Set)
-- **MAE**: 2.156 points
-- **RMSE**: 3.247 points
-- **R²**: 0.9998 (explains 99.98% of variance)
+The regression model predicts continuous stress scores from 0 to 100.  
+Performance values below come from the test set.
+
+**Key Metrics:**
+- **R²:** ~0.75  
+- **MAE:** ~5.7  
+- **Residual Std:** ~8.0  
+
+These results indicate that the model captures overall stress level patterns well, with reasonable prediction error across the full range of grid stress values.
 
 ### Classification Performance (Test Set)
-- **Accuracy**: 99.87%
-- **Precision**: 99.45% (of predicted blackouts, 99.45% are real)
-- **Recall**: 98.23% (detects 98.23% of actual blackouts)
-- **F1-Score**: 0.9884
+#### Best Model: XGBoost (scale_pos_weight)
+- **Accuracy**: 87.7%
+- **Precision**: 91.4% 
+- **Recall**: 80.7% 
+- **F1-Score**: 0.765
 
-### Confusion Matrix (Threshold=50)
-```
-                    Predicted
-                Low Risk  High Risk
-Actual Low Risk    52,134         89
-Actual High Risk      156        220
-```
+**Performance Summary**: This model provides a strong balance between detecting true high-risk events and keeping false alarms low.
 
-### Business Impact
-- **False Negatives (Missed Blackouts)**: 156 (0.29% of test set)
-- **False Positives (False Alarms)**: 89 (0.17% of test set)
-- **Overall Reliability**: 99.54%
-
----
-
-## Key Findings
-
-### Top 5 Most Important Features
-1. `imports_lag_1h` (29.5%)
-2. `load_change_24h` (10.5%)
-3. `load_rolling_mean_24h` (9.8%)
-4. `load_change_1h` (9.3%)
-5. `load_rolling_std_24h` (8.2%)
-
-### Threshold Optimization Results
-| Threshold | Accuracy | Recall | F1-Score | Missed Blackouts |
-|-----------|----------|--------|----------|------------------|
-| 40 | 0.9912 | 0.9934 | 0.9823 | 25 |
-| 45 | 0.9945 | 0.9889 | 0.9867 | 42 |
-| **50** | **0.9987** | **0.9823** | **0.9884** | **156** |
-| 55 | 0.9992 | 0.9712 | 0.9891 | 187 |
-
-**Optimal Threshold**: 50 points (balances recall and precision)
 
 ---
 
