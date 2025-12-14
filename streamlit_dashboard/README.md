@@ -58,11 +58,14 @@ GridWatch integrates weather, generation, load, and cross-border flow data to pr
    - `country_stats.csv` - Country-level statistics
    - need to copy the ARIMA model pkl files inside arima_models folder. They are an output of the models notebook.
 
-5. Create a .env file with Databricks credentials
+5. Create a .env file with Databricks credentials. Select LOCAL_DEV_MODE=true to work with local .pkl files containing the models, or false if want to use the files publicly available in the cloud storage URL (This was necessary for the App deployment, due to the maximum permitted size of uploaded files in GitHub.).
+
 ```python
 DATABRICKS_TOKEN=your_token_here
 DATABRICKS_HOSTNAME=your_hostname.cloud.databricks.com
 DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/your_warehouse_id
+LOCAL_DEV_MODE=true | false
+GCP_PUBLIC_BASE_URL=https://storage.googleapis.com/europe-grid-load/time-series/
 ```
 
 ## Usage
