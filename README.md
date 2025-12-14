@@ -231,4 +231,12 @@ Raw Data → Processing → Feature Engineering → Model Training → Evaluatio
 - Temporal train/val/test split preserves time-series nature of data
 - Reserve margin uses 24-hour rolling windows per country
 
+
+## License
+
+This project is licensed under the Creative Commons
+Attribution–NonCommercial 4.0 International License (CC BY-NC 4.0).
+
+You may use, study, and modify this code for educational and research purposes. Commercial use is not permitted.
+
 **Last Updated**: December 2025  
