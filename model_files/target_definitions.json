@@ -1,0 +1,47 @@
+{
+  "targets": [
+    {
+      "id": "T1",
+      "name": "Large Forecast Error",
+      "weight": 25,
+      "threshold": ">10%"
+    },
+    {
+      "id": "T2",
+      "name": "Medium Forecast Error",
+      "weight": 10,
+      "threshold": "5-10%"
+    },
+    {
+      "id": "T3",
+      "name": "Underestimated Demand",
+      "weight": 20,
+      "threshold": ">5%"
+    },
+    {
+      "id": "T7",
+      "name": "High Exports",
+      "weight": 10,
+      "threshold": "<P10"
+    },
+    {
+      "id": "T8",
+      "name": "High Imports",
+      "weight": 20,
+      "threshold": ">P90"
+    },
+    {
+      "id": "T9",
+      "name": "Extreme Import/Export",
+      "weight": 15,
+      "threshold": ">P90 abs"
+    }
+  ],
+  "max_score": 100,
+  "blackout_threshold": 30,
+  "categories": {
+    "NORMAL": "0-29",
+    "WARNING": "30-59",
+    "CRITICAL": "60-100"
+  }
+}
