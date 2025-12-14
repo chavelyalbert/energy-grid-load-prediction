@@ -33,7 +33,101 @@ import pandas as pd
 import pytz
 load_dotenv()
 
+# Additional runtime configuration for local vs remote asset loading
+import requests
+import io
+import logging
+from pathlib import Path
+
 # Page configuration
+
+# Determine LOCAL_MODE: prefer explicit `LOCAL_MODE` env var; otherwise fall back
+# to the older `LOCAL_DEV_MODE` env var if present.
+_local_env_val = os.getenv("LOCAL_MODE")
+if _local_env_val is None:
+    LOCAL_MODE = os.getenv("LOCAL_DEV_MODE", "true").lower() in ("1", "true", "yes")
+else:
+    LOCAL_MODE = str(_local_env_val).lower() in ("1", "true", "yes")
+
+# Public GCP base URL used when LOCAL_MODE is False. Example:
+# https://storage.googleapis.com/my-public-bucket/path/to/streamlit_dashboard
+GCP_PUBLIC_BASE_URL = os.getenv("GCP_PUBLIC_BASE_URL", "").rstrip('/')
+
+logger = logging.getLogger(__name__)
+
+
+def _fetch_bytes_from_gcp(path: str) -> bytes:
+    """Fetch raw bytes from a public GCP URL constructed from base + path.
+
+    `path` is the path inside the bucket, e.g. "xgboost_model.pkl" or
+    "arima_models/ARIMA_DE.pkl". Raises if `GCP_PUBLIC_BASE_URL` is not set.
+    """
+    if not GCP_PUBLIC_BASE_URL:
+        raise ValueError("GCP_PUBLIC_BASE_URL is not set. Set it to the public bucket base URL.")
+
+    url = f"{GCP_PUBLIC_BASE_URL}/{path.lstrip('/')}"
+    logger.info("Fetching remote asset from %s", url)
+
+    # Use a session with simple retry behavior to handle transient failures
+    session = requests.Session()
+    try:
+        # Stream the response to avoid loading the whole body at once implicitly
+        # Set a generous read timeout for large objects
+        resp = session.get(url, timeout=(5, 300), stream=True)
+        try:
+            resp.raise_for_status()
+        except Exception:
+            logger.error("Failed fetching %s: status=%s; content=%s", url, getattr(resp, 'status_code', None), resp.text[:500] if hasattr(resp, 'text') else None)
+            raise
+
+        total = resp.headers.get('Content-Length')
+        try:
+            total = int(total) if total is not None else None
+        except Exception:
+            total = None
+
+        chunk_size = 8192
+        data_buf = bytearray()
+        downloaded = 0
+        for chunk in resp.iter_content(chunk_size=chunk_size):
+            if not chunk:
+                continue
+            data_buf.extend(chunk)
+            downloaded += len(chunk)
+            # Log progress every ~8MB
+            if downloaded % (8 * 1024 * 1024) < chunk_size:
+                logger.info("Downloading %s: %d bytes%s", path, downloaded, f" / {total}" if total else "")
+
+        logger.info("Finished downloading %s: %d bytes%s", path, downloaded, f" / {total}" if total else "")
+        return bytes(data_buf)
+    finally:
+        try:
+            session.close()
+        except Exception:
+            pass
+
+
+def _check_remote_asset(path: str) -> dict:
+    """Check remote asset with HEAD and return diagnostics.
+
+    Returns a dict with keys: url, ok (bool), status (int), content_length (int|None)
+    """
+    if not GCP_PUBLIC_BASE_URL:
+        return {"url": None, "ok": False, "status": None, "content_length": None}
+
+    url = f"{GCP_PUBLIC_BASE_URL}/{path.lstrip('/')}"
+    try:
+        resp = requests.head(url, timeout=15)
+        content_length = resp.headers.get('Content-Length')
+        try:
+            content_length = int(content_length) if content_length is not None else None
+        except Exception:
+            content_length = None
+        return {"url": url, "ok": resp.status_code == 200, "status": resp.status_code, "content_length": content_length}
+    except Exception as e:
+        logger.warning("HEAD check failed for %s: %s", url, e)
+        return {"url": url, "ok": False, "status": None, "content_length": None}
+
 st.set_page_config(
     page_title="EU Grid Stress Predictor",
     page_icon="⚡",
@@ -446,7 +540,7 @@ st.markdown("""
 # ============================================================================
 @st.cache_resource
 def load_model():
-    """Load the trained XGBoost model"""
+    """Load the trained XGBoost model (local file only)."""
     try:
         with open('xgboost_model.pkl', 'rb') as f:
             model = pickle.load(f)
@@ -456,19 +550,44 @@ def load_model():
         return None
     
 
-countries_list= ['AT', 'BE', 'DE', 'ES', 'FR', 'HR', 'HU', 'IT', 'LT', 'NL', 'PL', 'PT', 'SK']
 
-def load_models_arima():
-    """Load the trained ARIMA models for all countries"""
-    models = {}
+def load_arima_model_for_country(country_code):
+    """Load the ARIMA model for a specific country code only."""
     try:
-        for country_code in countries_list:
-            with open(f'arima_models/ARIMA_{country_code}.pkl', 'rb') as f:
-                models[country_code] = pickle.load(f)
-        # it returns a dictionary, where the keys are the country code. Values are the loaded ARIMA model objects for each country.
-        return models
+        # Local path: arima_models/ARIMA_{CODE}.pkl
+        local_rel_path = f'arima_models/ARIMA_{country_code}.pkl'
+        if LOCAL_MODE:
+            local_path = Path(__file__).parent / local_rel_path
+            if local_path.exists():
+                with open(local_path, 'rb') as f:
+                    return pickle.load(f)
+            else:
+                logger.warning("Local ARIMA model not found for %s: %s", country_code, local_path)
+                return None
+        else:
+            # Remote path: arima_{CODE}.pkl (lowercase)
+            remote_name = f'arima_{country_code}.pkl'
+            diag = _check_remote_asset(remote_name)
+            logger.info("Checking remote ARIMA asset for %s: %s", country_code, diag)
+            if diag.get('ok'):
+                try:
+                    data = _fetch_bytes_from_gcp(remote_name)
+                    logger.info("Loaded remote ARIMA model for %s from %s (bytes=%d)", country_code, diag.get('url'), len(data))
+                    return pickle.loads(data)
+                except requests.HTTPError as he:
+                    logger.error("HTTP error loading ARIMA model %s from %s: %s", country_code, diag.get('url'), he)
+                    st.error(f"HTTP error loading ARIMA model for {country_code}. URL: {diag.get('url')} (status={diag.get('status')}).")
+                    return None
+                except Exception as e:
+                    logger.exception(e)
+                    st.error(f"Error loading ARIMA model for {country_code} from {diag.get('url')}: {e}")
+                    return None
+            else:
+                logger.error("Remote ARIMA model not found for %s at expected path: %s (diag=%s)", country_code, remote_name, diag)
+                return None
     except Exception as e:
-        st.error(f"Error loading model: {e}")
+        st.error(f"Error loading ARIMA model for {country_code}: {e}")
+        logger.exception(e)
         return None
 
 # For example: Get the ARIMA model for Germany
@@ -768,9 +887,24 @@ def generate_6h_forecast(model):
     current_stress_value: the current stress score from live data
     returns: numpy array of 6 forecasted values
     """
-    forecast = model.predict(n_periods=6)  # predict next 24 steps
-    forecast = np.clip(forecast, 0, 100)  # clip to 0-100 scale if needed
-    return forecast
+    if model is None:
+        logger.warning("generate_6h_forecast called with None model")
+        # Return NaNs so downstream plotting can handle missing forecast
+        return np.full(6, np.nan)
+
+    # Some models may not have `predict` method; guard against that.
+    if not hasattr(model, 'predict'):
+        logger.warning("ARIMA model does not have predict(): %s", type(model))
+        return np.full(6, np.nan)
+
+    try:
+        forecast = model.predict(n_periods=6)  # predict next 6 steps
+        forecast = np.clip(forecast, 0, 100)  # clip to 0-100 scale if needed
+        return forecast
+    except Exception as e:
+        logger.exception(e)
+        st.warning(f"ARIMA forecast failed: {e}")
+        return np.full(6, np.nan)
 
 
 def get_last_24h_stress_data(data_scores_real, country_code):
@@ -1150,7 +1284,9 @@ def main():
     feature_names = load_feature_names()
     data_for_simulations, data_for_live, data_scores_real = fetch_data_from_databricks()
     country_stats = load_country_stats()
-    all_models_arima = load_models_arima()
+
+    # Only load the ARIMA model for the selected country
+    # selected_country is set in the sidebar logic below
     
     # Header
     st.markdown("""
@@ -1300,7 +1436,7 @@ def main():
             sim_row = sim_row.iloc[0]
 
         # select arima model for the country the user selected
-        model_arima_for_country = all_models_arima[selected_country]
+        model_arima_for_country = load_arima_model_for_country(selected_country)
         
         st.markdown("---")
         
