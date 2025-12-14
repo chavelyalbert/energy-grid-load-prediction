@@ -1,0 +1,13 @@
+{
+  "test_set": {
+    "r2_score": 0.999878,
+    "mae": 0.0247,
+    "rmse": 0.167
+  },
+  "training_info": {
+    "training_samples": 385973,
+    "validation_samples": 111142,
+    "test_samples": 53047,
+    "features_used": 43
+  }
+}
