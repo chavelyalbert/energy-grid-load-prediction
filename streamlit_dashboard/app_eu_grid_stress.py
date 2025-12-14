@@ -3,6 +3,7 @@
 EUROPEAN POWER GRID STRESS PREDICTOR - STREAMLIT DASHBOARD
 ================================================================================
 Author: Team 6 - GridWatch
+Chavely Albert Fernandez, Pedro Miguel da Câmara Leme, Ya-Chi Hsiao and Maria Sokotushchenko
 Project: Capstone - European Power Grid Stress Prediction
 Date: December 2025
 
@@ -2200,6 +2201,7 @@ def main():
         <div class="footer">
             <p>European Power Grid Stress Prediction System</p>
             <p>Team 6 - GridWatch | Capstone Project | December 2025</p>
+            <p>Authors: Chavely Albert Fernandez, Pedro Miguel da Câmara Leme, Ya-Chi Hsiao and Maria Sokotushchenko</p>
             <p>XGBoost Classifier with class imbalance handling (F1 = 0.765, Recall = 0.807) | 13 Countries | 550K+ hourly records</p>
         </div>
     """, unsafe_allow_html=True)
