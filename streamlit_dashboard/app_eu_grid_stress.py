@@ -542,7 +542,8 @@ st.markdown("""
 def load_model():
     """Load the trained XGBoost model (local file only)."""
     try:
-        with open('xgboost_model.pkl', 'rb') as f:
+        model_path = Path(__file__).parent / 'xgboost_model.pkl'
+        with open(model_path, 'rb') as f:
             model = pickle.load(f)
         return model
     except Exception as e:
@@ -597,7 +598,8 @@ def load_arima_model_for_country(country_code):
 def load_feature_names():
     """Load feature names used by the model"""
     try:
-        with open('feature_names.pkl', 'rb') as f:
+        features_path = Path(__file__).parent / 'feature_names.pkl'
+        with open(features_path, 'rb') as f:
             features = pickle.load(f)
         return features
     except Exception as e:
@@ -649,7 +651,8 @@ def fetch_data_from_databricks():
 def load_country_stats():
     """Load country statistics"""
     try:
-        df = pd.read_csv('country_stats.csv')
+        stats_path = Path(__file__).parent / 'country_stats.csv'
+        df = pd.read_csv(stats_path)
         return df
     except Exception as e:
         st.error(f"Error loading country stats: {e}")
