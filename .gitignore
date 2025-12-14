@@ -1,2 +1,7 @@
 data/
-*.csv
+venv_*/
+venv/
+__pycache__/
+*.pyc
+arima_models/
+.env
