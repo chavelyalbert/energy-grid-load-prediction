@@ -3,6 +3,7 @@
 EUROPEAN POWER GRID STRESS PREDICTOR - STREAMLIT DASHBOARD
 ================================================================================
 Author: Team 6 - GridWatch
+Chavely Albert Fernandez, Pedro Miguel da Câmara Leme, Ya-Chi Hsiao and Maria Sokotushchenko
 Project: Capstone - European Power Grid Stress Prediction
 Date: December 2025
 
@@ -542,7 +543,8 @@ st.markdown("""
 def load_model():
     """Load the trained XGBoost model (local file only)."""
     try:
-        with open('xgboost_model.pkl', 'rb') as f:
+        model_path = Path(__file__).parent / 'xgboost_model.pkl'
+        with open(model_path, 'rb') as f:
             model = pickle.load(f)
         return model
     except Exception as e:
@@ -597,7 +599,8 @@ def load_arima_model_for_country(country_code):
 def load_feature_names():
     """Load feature names used by the model"""
     try:
-        with open('feature_names.pkl', 'rb') as f:
+        features_path = Path(__file__).parent / 'feature_names.pkl'
+        with open(features_path, 'rb') as f:
             features = pickle.load(f)
         return features
     except Exception as e:
@@ -649,7 +652,8 @@ def fetch_data_from_databricks():
 def load_country_stats():
     """Load country statistics"""
     try:
-        df = pd.read_csv('country_stats.csv')
+        stats_path = Path(__file__).parent / 'country_stats.csv'
+        df = pd.read_csv(stats_path)
         return df
     except Exception as e:
         st.error(f"Error loading country stats: {e}")
@@ -2197,6 +2201,7 @@ def main():
         <div class="footer">
             <p>European Power Grid Stress Prediction System</p>
             <p>Team 6 - GridWatch | Capstone Project | December 2025</p>
+            <p>Authors: Chavely Albert Fernandez, Pedro Miguel da Câmara Leme, Ya-Chi Hsiao and Maria Sokotushchenko</p>
             <p>XGBoost Classifier with class imbalance handling (F1 = 0.765, Recall = 0.807) | 13 Countries | 550K+ hourly records</p>
         </div>
     """, unsafe_allow_html=True)
