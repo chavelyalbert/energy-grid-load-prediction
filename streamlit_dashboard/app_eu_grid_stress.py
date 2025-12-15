@@ -607,7 +607,7 @@ def load_feature_names():
         st.error(f"Error loading feature names: {e}")
         return None
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def fetch_data_from_databricks():
     """Load data from Databricks"""
     try:
