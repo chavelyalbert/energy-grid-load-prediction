@@ -41,13 +41,6 @@ import logging
 from pathlib import Path
 
 # Page configuration
-
-# DEBUG: Show environment variable values and LOCAL_MODE at the top of the app
-def _debug_env_vars():
-    st.info(f"**DEBUG**: ENV LOCAL_MODE: `{os.getenv('LOCAL_MODE')}` | ENV LOCAL_DEV_MODE: `{os.getenv('LOCAL_DEV_MODE')}` | LOCAL_MODE (used): `{LOCAL_MODE}` | GCP_PUBLIC_BASE_URL: `{GCP_PUBLIC_BASE_URL}`")
-    logger.info(f"DEBUG: ENV LOCAL_MODE: {os.getenv('LOCAL_MODE')} | ENV LOCAL_DEV_MODE: {os.getenv('LOCAL_DEV_MODE')} | LOCAL_MODE (used): {LOCAL_MODE} | GCP_PUBLIC_BASE_URL: {GCP_PUBLIC_BASE_URL}")
-
-_debug_env_vars()
 # Determine LOCAL_MODE: prefer explicit `LOCAL_MODE` env var; otherwise fall back
 # to the older `LOCAL_DEV_MODE` env var if present.
 _local_env_val = os.getenv("LOCAL_MODE")
@@ -61,6 +54,9 @@ else:
 GCP_PUBLIC_BASE_URL = os.getenv("GCP_PUBLIC_BASE_URL", "").rstrip('/')
 
 logger = logging.getLogger(__name__)
+
+print(f"LOCAL_MODE: {LOCAL_MODE}")
+print(f"GCP_PUBLIC_BASE_URL: f{GCP_PUBLIC_BASE_URL}")
 
 
 def _fetch_bytes_from_gcp(path: str) -> bytes:
