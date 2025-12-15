@@ -43,20 +43,23 @@ from pathlib import Path
 # Page configuration
 # Determine LOCAL_MODE: prefer explicit `LOCAL_MODE` env var; otherwise fall back
 # to the older `LOCAL_DEV_MODE` env var if present.
-_local_env_val = os.getenv("LOCAL_MODE")
-if _local_env_val is None:
-    LOCAL_MODE = os.getenv("LOCAL_DEV_MODE", "true").lower() in ("1", "true", "yes")
+logger = logging.getLogger(__name__)
+LOCAL_MODE = False
+_local_env_val = os.getenv("LOCAL_DEV_MODE")
+if _local_env_val is not None:
+    LOCAL_MODE = _local_env_val
 else:
-    LOCAL_MODE = str(_local_env_val).lower() in ("1", "true", "yes")
+    logger.info(f"Env variable LOCAL_DEV_MODE not found. Using default: {str(LOCAL_MODE)}")
+
 
 # Public GCP base URL used when LOCAL_MODE is False. Example:
 # https://storage.googleapis.com/my-public-bucket/path/to/streamlit_dashboard
 GCP_PUBLIC_BASE_URL = os.getenv("GCP_PUBLIC_BASE_URL", "").rstrip('/')
 
-logger = logging.getLogger(__name__)
 
-print(f"LOCAL_MODE: {LOCAL_MODE}")
-print(f"GCP_PUBLIC_BASE_URL: f{GCP_PUBLIC_BASE_URL}")
+
+logger.info(f"LOCAL_MODE: {LOCAL_MODE}")
+logger.info(f"GCP_PUBLIC_BASE_URL: f{GCP_PUBLIC_BASE_URL}")
 
 
 def _fetch_bytes_from_gcp(path: str) -> bytes:
