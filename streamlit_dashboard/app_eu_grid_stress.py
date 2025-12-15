@@ -42,6 +42,12 @@ from pathlib import Path
 
 # Page configuration
 
+# DEBUG: Show environment variable values and LOCAL_MODE at the top of the app
+def _debug_env_vars():
+    st.info(f"**DEBUG**: ENV LOCAL_MODE: `{os.getenv('LOCAL_MODE')}` | ENV LOCAL_DEV_MODE: `{os.getenv('LOCAL_DEV_MODE')}` | LOCAL_MODE (used): `{LOCAL_MODE}` | GCP_PUBLIC_BASE_URL: `{GCP_PUBLIC_BASE_URL}`")
+    logger.info(f"DEBUG: ENV LOCAL_MODE: {os.getenv('LOCAL_MODE')} | ENV LOCAL_DEV_MODE: {os.getenv('LOCAL_DEV_MODE')} | LOCAL_MODE (used): {LOCAL_MODE} | GCP_PUBLIC_BASE_URL: {GCP_PUBLIC_BASE_URL}")
+
+_debug_env_vars()
 # Determine LOCAL_MODE: prefer explicit `LOCAL_MODE` env var; otherwise fall back
 # to the older `LOCAL_DEV_MODE` env var if present.
 _local_env_val = os.getenv("LOCAL_MODE")
@@ -564,7 +570,8 @@ def load_arima_model_for_country(country_code):
                 with open(local_path, 'rb') as f:
                     return pickle.load(f)
             else:
-                logger.warning("Local ARIMA model not found for %s: %s", country_code, local_path)
+                logger.warning("Local ARIMA model not found for %s: %s (LOCAL_MODE is True, so remote loading is disabled)", country_code, local_path)
+                st.warning(f"Local ARIMA model not found for {country_code}: {local_path}. LOCAL_MODE is True, so remote loading is disabled.")
                 return None
         else:
             # Remote path: arima_{CODE}.pkl (lowercase)
@@ -586,6 +593,7 @@ def load_arima_model_for_country(country_code):
                     return None
             else:
                 logger.error("Remote ARIMA model not found for %s at expected path: %s (diag=%s)", country_code, remote_name, diag)
+                st.warning(f"Remote ARIMA model not found for {country_code} at {diag.get('url')}. Check GCP_PUBLIC_BASE_URL and file existence.")
                 return None
     except Exception as e:
         st.error(f"Error loading ARIMA model for {country_code}: {e}")
@@ -1352,11 +1360,12 @@ def main():
             # Case 1 — "index" column exists and is a timestamp
             if "index" in live_row.columns:
 
+
                 # Convert to datetime
-                live_row["index"] = pd.to_datetime(live_row["index"])
+                live_row.loc[:, "index"] = pd.to_datetime(live_row["index"])
 
                 # Find row closest to entry_time
-                live_row["time_diff"] = abs(live_row["index"] - entry_time)
+                live_row.loc[:, "time_diff"] = abs(live_row["index"] - entry_time)
 
                 # Select best row
                 live_row = live_row.loc[live_row["time_diff"].idxmin()]
